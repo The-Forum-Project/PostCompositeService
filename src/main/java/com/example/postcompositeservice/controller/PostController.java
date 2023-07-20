@@ -24,21 +24,9 @@ import java.util.List;
 @RestController
 public class PostController {
     private PostService postService;
-    private FileService fileService;
-    private HistoryService historyService;
     @Autowired
     public void setPostService(PostService postService) {
         this.postService = postService;
-    }
-
-    @Autowired
-    public void setFileService(FileService fileService) {
-        this.fileService = fileService;
-    }
-
-    @Autowired
-    public void setHistoryService(HistoryService historyService) {
-        this.historyService = historyService;
     }
 
     @PostMapping(value = "/posts")
@@ -50,29 +38,7 @@ public class PostController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
 
-        Post post = Post.builder()
-                .userId(userId)
-                .title(title)
-                .content(content)
-                .isArchived(false)
-                .status("published")
-                .dateCreated(new Date())
-                .dateModified(new Date())
-                .postReplies(new ArrayList<>())
-                .build();
-
-        //upload any images to S3
-        System.out.println("Build post: " + post);
-        ResponseEntity<FileUrlResponse> response = fileService.uploadFiles(images);
-        System.out.println("image urls: " + response.getBody().getUrls());
-        post.setImages(response.getBody().getUrls());
-
-        //upload any attachments to S3
-        ResponseEntity<FileUrlResponse> attachmentResponse = fileService.uploadFiles(attachments);
-        System.out.println("attachment urls: " + attachmentResponse.getBody().getUrls());
-        post.setAttachments(attachmentResponse.getBody().getUrls());
-
-        postService.savePost(post);
+        postService.savePost(title, content, userId, images, attachments);
         return ResponseEntity.ok(GeneralResponse.builder().statusCode("200").message("Post created.").build());
     }
 
@@ -83,22 +49,9 @@ public class PostController {
                                                       @RequestParam(value = "attachments") MultipartFile[] attachments) throws PostNotFoundException, InvalidAuthorityException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
-        List<String> iamgeUrls = null;
-        if(images != null && images.length > 0){
-            ResponseEntity<FileUrlResponse> imagesresponse  = fileService.uploadFiles(images);
-            iamgeUrls = imagesresponse.getBody().getUrls();
-        }
-
-
-        List<String> attachmentUrls = null;
-        if(attachments != null && attachments.length > 0){
-            ResponseEntity<FileUrlResponse> attachmentResponse = fileService.uploadFiles(attachments);
-            attachmentUrls = attachmentResponse.getBody().getUrls();
-        }
-
 
         postService.modifyPost(postId,title
-                , content, attachmentUrls, iamgeUrls, userId);
+                , content, attachments, images, userId);
         return ResponseEntity.ok(GeneralResponse.builder().statusCode("200").message("Post modified").build());
     }
 
@@ -107,8 +60,6 @@ public class PostController {
         //need to check this user has the authority to see this post
         Post post = postService.getPostById(postId);
 
-        //set user history
-        historyService.setHistory(new HistoryRequest().builder().postId(postId).build());
         return ResponseEntity.ok(PostResponse.builder().post(post).build());
     }
 }

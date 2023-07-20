@@ -1,13 +1,13 @@
 package com.example.postcompositeservice.dto;
 
 import com.example.postcompositeservice.domain.Post;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Setter
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class PostResponse {
     Post post;
 }

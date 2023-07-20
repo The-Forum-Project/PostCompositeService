@@ -1,35 +1,94 @@
 package com.example.postcompositeservice.service;
 
-import com.example.postcompositeservice.dao.PostRepository;
 import com.example.postcompositeservice.domain.Post;
+import com.example.postcompositeservice.dto.FileUrlResponse;
+import com.example.postcompositeservice.dto.HistoryRequest;
+import com.example.postcompositeservice.dto.PostResponse;
 import com.example.postcompositeservice.exception.InvalidAuthorityException;
 import com.example.postcompositeservice.exception.PostNotFoundException;
+import com.example.postcompositeservice.service.remote.FileService;
+import com.example.postcompositeservice.service.remote.HistoryService;
+import com.example.postcompositeservice.service.remote.PostRemoteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
 @Service
 public class PostService {
-    private final PostRepository postRepository;
+    private PostRemoteService postRemoteService;
+    private FileService fileService;
+
+    private HistoryService historyService;
+
     @Autowired
-    public PostService(PostRepository postRepository) {
-        this.postRepository = postRepository;
+    public void setPostRemoteService(PostRemoteService postRemoteService) {
+        this.postRemoteService = postRemoteService;
     }
 
-    public void savePost(Post post) {
-        postRepository.save(post);
+    @Autowired
+    public void setFileService(FileService fileService) {
+        this.fileService = fileService;
+    }
+
+    @Autowired
+    public void setHistoryService(HistoryService historyService) {
+        this.historyService = historyService;
+    }
+
+    public void savePost(String title, String content, Long userId, MultipartFile[] images, MultipartFile[] attachments) {
+        Post post = Post.builder()
+                .userId(userId)
+                .title(title)
+                .content(content)
+                .isArchived(false)
+                .status("published")
+                .dateCreated(new Date())
+                .dateModified(new Date())
+                .postReplies(new ArrayList<>())
+                .build();
+
+        //upload any images to S3
+        System.out.println("Build post: " + post);
+        ResponseEntity<FileUrlResponse> response = fileService.uploadFiles(images);
+        System.out.println("image urls: " + response.getBody().getUrls());
+        post.setImages(response.getBody().getUrls());
+
+        //upload any attachments to S3
+        ResponseEntity<FileUrlResponse> attachmentResponse = fileService.uploadFiles(attachments);
+        System.out.println("attachment urls: " + attachmentResponse.getBody().getUrls());
+        post.setAttachments(attachmentResponse.getBody().getUrls());
+
+        postRemoteService.setPost(post);
     }
 
     public Post getPostById(String id) {
-        return postRepository.findById(id).orElse(null);
+        PostResponse response = postRemoteService.getPostById(id);
+        //set user history
+        historyService.setHistory(HistoryRequest.builder().postId(id).build());
+        return response.getPost();
     }
-    public void modifyPost(String postId, String title, String content, List<String> attachmentUrls, List<String> iamgeUrls, Long userId) throws InvalidAuthorityException, PostNotFoundException {
 
-        Optional<Post> postOptional = postRepository.findById(postId);
+    public void modifyPost(String postId, String title, String content, MultipartFile[] attachments,  MultipartFile[] images, Long userId) throws InvalidAuthorityException, PostNotFoundException {
+        List<String> iamgeUrls = null;
+        if(images != null && images.length > 0){
+            ResponseEntity<FileUrlResponse> imagesresponse  = fileService.uploadFiles(images);
+            iamgeUrls = imagesresponse.getBody().getUrls();
+        }
 
-        if (postOptional.isPresent()) {
-            Post post = postOptional.get();
+
+        List<String> attachmentUrls = null;
+        if(attachments != null && attachments.length > 0){
+            ResponseEntity<FileUrlResponse> attachmentResponse = fileService.uploadFiles(attachments);
+            attachmentUrls = attachmentResponse.getBody().getUrls();
+        }
+
+        PostResponse response = postRemoteService.getPostById(postId);
+
+        if (response.getPost() != null) {
+            Post post = response.getPost();
             if(post.getUserId() != userId){
                 throw new InvalidAuthorityException();
             }
@@ -49,7 +108,7 @@ public class PostService {
             }
 
             post.setDateModified(new Date());
-            postRepository.save(post);
+            postRemoteService.setPost(post);
         } else {
             throw new PostNotFoundException();
         }
