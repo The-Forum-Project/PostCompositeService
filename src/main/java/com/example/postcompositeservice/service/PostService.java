@@ -11,6 +11,9 @@ import com.example.postcompositeservice.service.remote.HistoryService;
 import com.example.postcompositeservice.service.remote.PostRemoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +23,6 @@ import java.util.*;
 public class PostService {
     private PostRemoteService postRemoteService;
     private FileService fileService;
-
     private HistoryService historyService;
 
     @Autowired
@@ -38,7 +40,12 @@ public class PostService {
         this.historyService = historyService;
     }
 
-    public void savePost(String title, String content, Long userId, MultipartFile[] images, MultipartFile[] attachments) {
+    public void savePost(String title, String content, Long userId, MultipartFile[] images, MultipartFile[] attachments) throws InvalidAuthorityException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
+        if (authorities.stream().noneMatch(authority -> authority.getAuthority().equals("normal"))) {
+            throw new InvalidAuthorityException();
+        }
         Post post = Post.builder()
                 .userId(userId)
                 .title(title)
@@ -72,6 +79,11 @@ public class PostService {
     }
 
     public void modifyPost(String postId, String title, String content, MultipartFile[] attachments,  MultipartFile[] images, Long userId) throws InvalidAuthorityException, PostNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
+        if (authorities.stream().noneMatch(authority -> authority.getAuthority().equals("normal"))) {
+            throw new InvalidAuthorityException();
+        }
         List<String> iamgeUrls = null;
         if(images != null && images.length > 0){
             ResponseEntity<FileUrlResponse> imagesresponse  = fileService.uploadFiles(images);

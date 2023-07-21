@@ -13,6 +13,7 @@ import com.example.postcompositeservice.service.remote.HistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,10 +35,10 @@ public class PostController {
             @RequestParam(value = "title") String title,
             @RequestParam(value = "content") String content,
             @RequestParam(value = "images") MultipartFile[] images,
-            @RequestParam(value = "attachments") MultipartFile[] attachments) {
+            @RequestParam(value = "attachments") MultipartFile[] attachments) throws InvalidAuthorityException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
-
+        List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
         postService.savePost(title, content, userId, images, attachments);
         return ResponseEntity.ok(GeneralResponse.builder().statusCode("200").message("Post created.").build());
     }
@@ -49,17 +50,15 @@ public class PostController {
                                                       @RequestParam(value = "attachments") MultipartFile[] attachments) throws PostNotFoundException, InvalidAuthorityException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
-
+        List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
         postService.modifyPost(postId,title
                 , content, attachments, images, userId);
         return ResponseEntity.ok(GeneralResponse.builder().statusCode("200").message("Post modified").build());
     }
 
     @GetMapping("/post/{postId}")
-    public ResponseEntity<PostResponse> getPostById(@PathVariable String postId) throws PostNotFoundException, InvalidAuthorityException {
-        //need to check this user has the authority to see this post
+    public ResponseEntity<PostResponse> getPostById(@PathVariable String postId) {
         Post post = postService.getPostById(postId);
-
         return ResponseEntity.ok(PostResponse.builder().post(post).build());
     }
 }
