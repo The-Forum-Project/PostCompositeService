@@ -34,8 +34,8 @@ public class PostController {
     public ResponseEntity<GeneralResponse> createPost(
             @RequestParam(value = "title") String title,
             @RequestParam(value = "content") String content,
-            @RequestParam(value = "images") MultipartFile[] images,
-            @RequestParam(value = "attachments") MultipartFile[] attachments) throws InvalidAuthorityException {
+            @RequestParam(value = "images", required = false)  MultipartFile[] images,
+            @RequestParam(value = "attachments", required = false)  MultipartFile[] attachments) throws InvalidAuthorityException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
         List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
@@ -46,8 +46,8 @@ public class PostController {
     @PatchMapping("/{postId}")
     public ResponseEntity<GeneralResponse> modifyPost(@PathVariable String postId, @RequestParam(value = "title") String title,
                                                       @RequestParam(value = "content") String content,
-                                                      @RequestParam(value = "images") MultipartFile[] images,
-                                                      @RequestParam(value = "attachments") MultipartFile[] attachments) throws PostNotFoundException, InvalidAuthorityException {
+                                                      @RequestParam(value = "images", required = false)  MultipartFile[] images,
+                                                      @RequestParam(value = "attachments", required = false)  MultipartFile[] attachments) throws PostNotFoundException, InvalidAuthorityException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
         List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();

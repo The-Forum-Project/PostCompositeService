@@ -59,14 +59,18 @@ public class PostService {
 
         //upload any images to S3
         System.out.println("Build post: " + post);
-        ResponseEntity<FileUrlResponse> response = fileService.uploadFiles(images);
-        System.out.println("image urls: " + response.getBody().getUrls());
-        post.setImages(response.getBody().getUrls());
+        if(images != null){
+            ResponseEntity<FileUrlResponse> response = fileService.uploadFiles(images);
+            System.out.println("image urls: " + response.getBody().getUrls());
+            post.setImages(response.getBody().getUrls());
+        }
 
         //upload any attachments to S3
-        ResponseEntity<FileUrlResponse> attachmentResponse = fileService.uploadFiles(attachments);
-        System.out.println("attachment urls: " + attachmentResponse.getBody().getUrls());
-        post.setAttachments(attachmentResponse.getBody().getUrls());
+        if(attachments != null) {
+            ResponseEntity<FileUrlResponse> attachmentResponse = fileService.uploadFiles(attachments);
+            System.out.println("attachment urls: " + attachmentResponse.getBody().getUrls());
+            post.setAttachments(attachmentResponse.getBody().getUrls());
+        }
 
         postRemoteService.setPost(post);
     }
