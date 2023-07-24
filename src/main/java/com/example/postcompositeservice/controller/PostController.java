@@ -18,6 +18,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -32,27 +34,23 @@ public class PostController {
 
     @PostMapping(value = "/posts")
     public ResponseEntity<GeneralResponse> createPost(
-            @RequestParam(value = "title") String title,
+            @RequestParam(value = "title")  String title,
             @RequestParam(value = "content") String content,
+            @RequestParam(value = "status") @NotBlank @Valid String status,
             @RequestParam(value = "images", required = false)  MultipartFile[] images,
             @RequestParam(value = "attachments", required = false)  MultipartFile[] attachments) throws InvalidAuthorityException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) authentication.getPrincipal();
-        List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
-        postService.savePost(title, content, userId, images, attachments);
+
+        postService.savePost(title, content, status, images, attachments);
         return ResponseEntity.ok(GeneralResponse.builder().statusCode("200").message("Post created.").build());
     }
 
     @PatchMapping("/{postId}")
-    public ResponseEntity<GeneralResponse> modifyPost(@PathVariable String postId, @RequestParam(value = "title") String title,
-                                                      @RequestParam(value = "content") String content,
+    public ResponseEntity<GeneralResponse> modifyPost(@PathVariable String postId,
+                                                      @RequestParam(value = "title") @NotBlank @Valid String title,
+                                                      @RequestParam(value = "content") @NotBlank @Valid String content,
                                                       @RequestParam(value = "images", required = false)  MultipartFile[] images,
                                                       @RequestParam(value = "attachments", required = false)  MultipartFile[] attachments) throws PostNotFoundException, InvalidAuthorityException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) authentication.getPrincipal();
-        List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
-        postService.modifyPost(postId,title
-                , content, attachments, images, userId);
+        postService.modifyPost(postId,title, content, attachments, images);
         return ResponseEntity.ok(GeneralResponse.builder().statusCode("200").message("Post modified").build());
     }
 

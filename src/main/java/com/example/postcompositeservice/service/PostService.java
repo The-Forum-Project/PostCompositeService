@@ -40,8 +40,12 @@ public class PostService {
         this.historyService = historyService;
     }
 
-    public void savePost(String title, String content, Long userId, MultipartFile[] images, MultipartFile[] attachments) throws InvalidAuthorityException {
+    public void savePost(String title, String content, String status, MultipartFile[] images, MultipartFile[] attachments) throws InvalidAuthorityException {
+        if (status == "published" && (title.length() == 0 || content.length() == 0)) {
+            throw new IllegalArgumentException("Title and content cannot be empty when publishing a post.");
+        }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = (Long) authentication.getPrincipal();
         List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
         if (authorities.stream().noneMatch(authority -> authority.getAuthority().equals("normal"))) {
             throw new InvalidAuthorityException();
@@ -51,7 +55,7 @@ public class PostService {
                 .title(title)
                 .content(content)
                 .isArchived(false)
-                .status("published")
+                .status(status)
                 .dateCreated(new Date())
                 .dateModified(new Date())
                 .postReplies(new ArrayList<>())
@@ -82,9 +86,10 @@ public class PostService {
         return response.getPost();
     }
 
-    public void modifyPost(String postId, String title, String content, MultipartFile[] attachments,  MultipartFile[] images, Long userId) throws InvalidAuthorityException, PostNotFoundException {
+    public void modifyPost(String postId, String title, String content, MultipartFile[] attachments,  MultipartFile[] images) throws InvalidAuthorityException, PostNotFoundException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
+        Long userId = (Long) authentication.getPrincipal();
         if (authorities.stream().noneMatch(authority -> authority.getAuthority().equals("normal"))) {
             throw new InvalidAuthorityException();
         }
