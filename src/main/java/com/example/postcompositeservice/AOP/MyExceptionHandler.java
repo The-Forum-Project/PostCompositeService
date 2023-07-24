@@ -25,10 +25,15 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(value = {PostNotFoundException.class})
     public ResponseEntity<GeneralResponse> handlePostNotFoundException(PostNotFoundException e){
-        return new ResponseEntity(GeneralResponse.builder().statusCode("400").message(e.getMessage()).build(), HttpStatus.NOT_FOUND);
+        return new ResponseEntity(GeneralResponse.builder().statusCode("404").message(e.getMessage()).build(), HttpStatus.NOT_FOUND);
     }
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<GeneralResponse> handleAccessDeniedException(AccessDeniedException e) {
-        return new ResponseEntity(GeneralResponse.builder().statusCode("400").message(e.getMessage()).build(), HttpStatus.FORBIDDEN);
+//    @ExceptionHandler(AccessDeniedException.class)
+//    public ResponseEntity<GeneralResponse> handleAccessDeniedException(AccessDeniedException e) {
+//        return new ResponseEntity(GeneralResponse.builder().statusCode("400").message(e.getMessage()).build(), HttpStatus.FORBIDDEN);
+//    }
+//
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<GeneralResponse> handleException(IllegalArgumentException e) {
+        return new ResponseEntity(GeneralResponse.builder().statusCode("400").message(e.getMessage()).build(), HttpStatus.BAD_REQUEST);
     }
 }

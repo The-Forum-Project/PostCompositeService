@@ -41,7 +41,7 @@ public class PostService {
     }
 
     public void savePost(String title, String content, String status, MultipartFile[] images, MultipartFile[] attachments) throws InvalidAuthorityException {
-        if (status == "published" && (title.length() == 0 || content.length() == 0)) {
+        if (Objects.equals(status, "published") && (title.length() == 0 || content.length() == 0)) {
             throw new IllegalArgumentException("Title and content cannot be empty when publishing a post.");
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
