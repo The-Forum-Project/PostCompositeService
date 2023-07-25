@@ -53,7 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
             AuthUserDetail authUserDetail = authUserDetailOptional.get();
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     authUserDetail.getId(),
-                    null,
+                    prefixedToken.substring(7), //store the token in the authentication object, TODO: this is not a good practice, we should not store the token in the authentication object
                     authUserDetail.getAuthorities()
             ); // generate authentication object
 

@@ -1,27 +1,16 @@
 package com.example.postcompositeservice.controller;
 
-import com.example.postcompositeservice.domain.Post;
-import com.example.postcompositeservice.dto.FileUrlResponse;
-import com.example.postcompositeservice.dto.GeneralResponse;
-import com.example.postcompositeservice.dto.HistoryRequest;
-import com.example.postcompositeservice.dto.PostResponse;
+import com.example.postcompositeservice.dto.*;
 import com.example.postcompositeservice.exception.InvalidAuthorityException;
 import com.example.postcompositeservice.exception.PostNotFoundException;
 import com.example.postcompositeservice.service.PostService;
-import com.example.postcompositeservice.service.remote.FileService;
-import com.example.postcompositeservice.service.remote.HistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -58,5 +47,11 @@ public class PostController {
     public ResponseEntity<PostResponse> getPostById(@PathVariable String postId) {
         Post post = postService.getPostById(postId);
         return ResponseEntity.ok(PostResponse.builder().post(post).build());
+    }
+
+    @GetMapping("/histories")
+    public List<HistoryAndPostResponse> getAllHistoriesByUserId(){
+        List<HistoryAndPostResponse> res = postService.getAllHistoriesByUserId();
+        return res;
     }
 }

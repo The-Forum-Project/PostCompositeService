@@ -1,9 +1,6 @@
 package com.example.postcompositeservice.service;
 
-import com.example.postcompositeservice.domain.Post;
-import com.example.postcompositeservice.dto.FileUrlResponse;
-import com.example.postcompositeservice.dto.HistoryRequest;
-import com.example.postcompositeservice.dto.PostResponse;
+import com.example.postcompositeservice.dto.*;
 import com.example.postcompositeservice.exception.InvalidAuthorityException;
 import com.example.postcompositeservice.exception.PostNotFoundException;
 import com.example.postcompositeservice.service.remote.FileService;
@@ -87,6 +84,9 @@ public class PostService {
     }
 
     public void modifyPost(String postId, String title, String content, MultipartFile[] attachments,  MultipartFile[] images) throws InvalidAuthorityException, PostNotFoundException {
+        if (title.length() == 0 || content.length() == 0) {
+            throw new IllegalArgumentException("Title and content cannot be empty when publishing a post.");
+        }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         List<GrantedAuthority> authorities = (List<GrantedAuthority>) authentication.getAuthorities();
         Long userId = (Long) authentication.getPrincipal();
@@ -113,18 +113,12 @@ public class PostService {
             if(post.getUserId() != userId){
                 throw new InvalidAuthorityException();
             }
-            if (title != null) {
-                post.setTitle(title);
-            }
-            if (content != null) {
-                post.setContent(content);
-            }
+            post.setTitle(title);
+            post.setContent(content);
             if (iamgeUrls != null) {
-                //System.out.println("iamgeUrls: " + iamgeUrls);
                 post.setImages(iamgeUrls);
             }
             if (attachmentUrls != null) {
-                //System.out.println("attachmentUrls: " + attachmentUrls);
                 post.setAttachments(attachmentUrls);
             }
 
@@ -134,5 +128,20 @@ public class PostService {
             throw new PostNotFoundException();
         }
 
+    }
+
+    public List<HistoryAndPostResponse> getAllHistoriesByUserId() {
+        List<History> res = historyService.getAllHistoriesByUserId();
+        List<HistoryAndPostResponse> response = new ArrayList<>();
+        for (History history : res) {
+            PostResponse postResponse = postRemoteService.getPostById(history.getPostId());
+            if (postResponse.getPost() != null) {
+                response.add(HistoryAndPostResponse.builder()
+                        .history(history)
+                        .post(postResponse.getPost())
+                        .build());
+            }
+        }
+        return response;
     }
 }

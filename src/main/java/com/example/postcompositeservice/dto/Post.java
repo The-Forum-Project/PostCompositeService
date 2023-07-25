@@ -1,4 +1,4 @@
-package com.example.postcompositeservice.domain;
+package com.example.postcompositeservice.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +10,6 @@ import java.util.List;
 
 @Data
 @Builder
-@Document(collection = "posts")
 public class Post {
     @Id
     private String postId;

@@ -12,8 +12,9 @@ public class FeignClientInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate template) {
         // Set the token value in the request header
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQGVtYWlsLmNvbSIsInBlcm1pc3Npb25zIjpbeyJhdXRob3JpdHkiOiJlbWFpbCJ9LHsiYXV0aG9yaXR5Ijoibm9ybWFsIn1dLCJpZCI6Mn0.Fgfs0NzaXujnN1J1PzTzuBn7IYiav5vZTUycP0-drwY";
-        System.out.println("token: " + token);
+        //String token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyQGVtYWlsLmNvbSIsInBlcm1pc3Npb25zIjpbeyJhdXRob3JpdHkiOiJlbWFpbCJ9LHsiYXV0aG9yaXR5Ijoibm9ybWFsIn1dLCJpZCI6Mn0.Fgfs0NzaXujnN1J1PzTzuBn7IYiav5vZTUycP0-drwY";
+        //System.out.println("token: " + token);
+        String token = (String) authentication.getCredentials();
         template.header("Authorization", "Bearer " + token);
     }
 }

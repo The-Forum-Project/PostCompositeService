@@ -1,13 +1,15 @@
-package com.example.postcompositeservice.domain;
+package com.example.postcompositeservice.dto;
 
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
-public class SubReply {
+public class PostReply {
     private Long userId;
     private String comment;
     private Boolean isActive;
     private Date dateCreated;
+    private List<SubReply> subReplies;
 }
